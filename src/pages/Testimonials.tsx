@@ -78,7 +78,7 @@ const Testimonials = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="py-16 bg-gradient-hero text-primary-foreground">
+      <section className="py-16 bg-gradient-purple text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Depoimentos</h1>
           <p className="text-lg max-w-3xl mx-auto opacity-95">
@@ -112,7 +112,7 @@ const Testimonials = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-1 mb-3">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 fill-gold text-gold" />
+                      <Star key={i} className="w-5 h-5 fill-yellow-bright text-yellow-bright" />
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-4 italic">"{testimonial.text}"</p>

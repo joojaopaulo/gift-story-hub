@@ -96,7 +96,7 @@ const Home = () => {
             alt="Produtos Personalizados"
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-coffee-dark/80 to-coffee-dark/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-darker/85 to-purple-dark/50" />
         </div>
         
         <div className="container mx-auto px-4 z-10 text-center text-primary-foreground">
@@ -173,7 +173,7 @@ const Home = () => {
                 <CardContent className="pt-6">
                   <div className="flex mb-3">
                     {[...Array(testimonial.rating)].map((_, i) => (
-                      <span key={i} className="text-gold text-xl">★</span>
+                      <span key={i} className="text-yellow-bright text-xl">★</span>
                     ))}
                   </div>
                   <p className="text-muted-foreground mb-4 italic">"{testimonial.text}"</p>

@@ -54,11 +54,16 @@ export default {
           DEFAULT: "hsl(var(--whatsapp))",
           hover: "hsl(var(--whatsapp-hover))",
         },
-        coffee: {
-          light: "hsl(var(--coffee-light))",
-          dark: "hsl(var(--coffee-dark))",
+        yellow: {
+          bright: "hsl(var(--yellow-bright))",
+          light: "hsl(var(--yellow-light))",
+          dark: "hsl(var(--yellow-dark))",
         },
-        gold: "hsl(var(--gold))",
+        purple: {
+          light: "hsl(var(--purple-light))",
+          dark: "hsl(var(--purple-dark))",
+          darker: "hsl(var(--purple-darker))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
