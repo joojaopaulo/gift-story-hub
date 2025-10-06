@@ -20,7 +20,7 @@ const Contact = () => {
     
     // Send to WhatsApp
     const whatsappMessage = `Olá! Meu nome é ${formData.name}.%0A%0A${formData.message}%0A%0AContato: ${formData.whatsapp}%0AEmail: ${formData.email}`;
-    window.open(`https://wa.me/5511999999999?text=${whatsappMessage}`, "_blank");
+    window.open(`https://wa.me/5555996665991?text=${whatsappMessage}`, "_blank");
     
     toast.success("Mensagem enviada! Aguarde nosso contato.");
     
@@ -34,15 +34,15 @@ const Contact = () => {
   };
 
   const handleWhatsApp = () => {
-    window.open("https://wa.me/5511999999999?text=Olá! Gostaria de mais informações.", "_blank");
+    window.open("https://wa.me/5555996665991?text=Olá! Gostaria de mais informações.", "_blank");
   };
 
   const contactInfo = [
     {
       icon: Phone,
       title: "Telefone",
-      content: "(11) 99999-9999",
-      action: "tel:+5511999999999",
+      content: "(55) 99666-5991",
+      action: "tel:+5555996665991",
     },
     {
       icon: Mail,
@@ -184,7 +184,9 @@ const Contact = () => {
                 <CardContent>
                   <div className="space-y-2">
                     <a
-                      href="#"
+                      href="https://www.instagram.com/coffeecup_personalizados/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary transition-smooth"
                     >
                       <span className="font-medium">Instagram</span>

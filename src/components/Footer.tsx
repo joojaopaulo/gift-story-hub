@@ -76,7 +76,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2 opacity-90">
                 <Phone size={16} />
-                <span>(11) 99999-9999</span>
+                <span>(55) 99666-5991</span>
               </li>
               <li className="flex items-center gap-2 opacity-90">
                 <Mail size={16} />
@@ -84,11 +84,11 @@ const Footer = () => {
               </li>
             </ul>
             <div className="flex gap-4 mt-4">
-              <a href="#" className="opacity-90 hover:opacity-100 transition-smooth">
-                <Facebook size={20} />
+              <a href="https://www.instagram.com/coffeecup_personalizados/" target="_blank" rel="noopener noreferrer" className="opacity-90 hover:opacity-100 transition-smooth">
+                <Instagram size={20} />
               </a>
               <a href="#" className="opacity-90 hover:opacity-100 transition-smooth">
-                <Instagram size={20} />
+                <Facebook size={20} />
               </a>
             </div>
           </div>

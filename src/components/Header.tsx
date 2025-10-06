@@ -19,7 +19,7 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const handleWhatsApp = () => {
-    window.open("https://wa.me/5511999999999?text=Olá! Gostaria de saber mais sobre os produtos personalizados.", "_blank");
+    window.open("https://wa.me/5555996665991?text=Olá! Gostaria de saber mais sobre os produtos personalizados.", "_blank");
   };
 
   return (
@@ -27,9 +27,8 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <img src={logo} alt="CoffeeCup Logo" className="h-10 w-auto" />
-            <span className="font-bold text-xl hidden sm:inline-block bg-gradient-to-r from-yellow-bright to-primary bg-clip-text text-transparent">CoffeeCup</span>
+          <Link to="/" className="flex items-center">
+            <img src={logo} alt="CoffeeCup Logo" className="h-12 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}

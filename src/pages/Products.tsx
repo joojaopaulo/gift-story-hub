@@ -1,240 +1,166 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import ProductModal from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-
-import categoryMugs from "@/assets/category-mugs.jpg";
-import categoryTshirts from "@/assets/category-tshirts.jpg";
-import categoryFrames from "@/assets/category-frames.jpg";
-import categoryCorporate from "@/assets/category-corporate.jpg";
+import { Input } from "@/components/ui/input";
+import { allProducts, categories } from "@/data/products";
+import { Product } from "@/types/product";
 
 const Products = () => {
-  const [searchParams] = useSearchParams();
-  const categoryParam = searchParams.get("categoria");
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    categoryParam ? [categoryParam] : []
-  );
-  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<string>("all");
-
-  const categories = [
-    { id: "canecas", label: "Canecas" },
-    { id: "camisetas", label: "Camisetas" },
-    { id: "quadros", label: "Quadros" },
-    { id: "corporativo", label: "Corporativo" },
-    { id: "especiais", label: "Datas Especiais" },
-  ];
-
-  const occasions = [
-    { id: "presente", label: "Presente" },
-    { id: "corporativo", label: "Corporativo" },
-    { id: "aniversario", label: "Aniversário" },
-    { id: "casamento", label: "Casamento" },
-  ];
-
-  const priceRanges = [
-    { id: "all", label: "Todos os Preços" },
-    { id: "0-50", label: "Até R$ 50" },
-    { id: "50-100", label: "R$ 50 - R$ 100" },
-    { id: "100+", label: "Acima de R$ 100" },
-  ];
-
-  // Mock products
-  const allProducts = [
-    {
-      id: "1",
-      name: "Caneca Personalizada com Foto",
-      price: 45.90,
-      image: categoryMugs,
-      category: "canecas",
-    },
-    {
-      id: "2",
-      name: "Caneca Mágica Térmica",
-      price: 55.90,
-      image: categoryMugs,
-      category: "canecas",
-    },
-    {
-      id: "3",
-      name: "Camiseta Premium Personalizada",
-      price: 79.90,
-      image: categoryTshirts,
-      category: "camisetas",
-    },
-    {
-      id: "4",
-      name: "Camiseta Básica com Estampa",
-      price: 59.90,
-      image: categoryTshirts,
-      category: "camisetas",
-    },
-    {
-      id: "5",
-      name: "Quadro Decorativo Personalizado",
-      price: 89.90,
-      image: categoryFrames,
-      category: "quadros",
-    },
-    {
-      id: "6",
-      name: "Kit Corporativo Premium",
-      price: 149.90,
-      image: categoryCorporate,
-      category: "corporativo",
-    },
-  ];
-
-  const handleCategoryToggle = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((c) => c !== categoryId)
-        : [...prev, categoryId]
-    );
+  const openModal = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
   };
 
-  const handleOccasionToggle = (occasionId: string) => {
-    setSelectedOccasions((prev) =>
-      prev.includes(occasionId)
-        ? prev.filter((o) => o !== occasionId)
-        : [...prev, occasionId]
-    );
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedProduct(null), 300);
   };
 
-  const clearFilters = () => {
-    setSelectedCategories([]);
-    setSelectedOccasions([]);
-    setPriceRange("all");
-  };
+  // Filter products based on category and search
+  const filteredProducts = useMemo(() => {
+    let filtered = allProducts;
 
-  // Filter products based on selections
-  const filteredProducts = allProducts.filter((product) => {
-    if (selectedCategories.length > 0 && !selectedCategories.includes(product.category)) {
-      return false;
+    // Filter by category
+    if (selectedCategory !== "Todos") {
+      filtered = filtered.filter(p => p.categoria === selectedCategory);
     }
-    if (priceRange !== "all") {
-      const [min, max] = priceRange.split("-").map((v) => (v === "+" ? Infinity : parseInt(v)));
-      if (product.price < min || product.price > max) {
-        return false;
-      }
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.nome.toLowerCase().includes(search) ||
+        p.categoria.toLowerCase().includes(search)
+      );
     }
-    return true;
-  });
+
+    return filtered;
+  }, [selectedCategory, searchTerm]);
 
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-bold mb-8">Nossos Produtos</h1>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filters */}
-          <aside className="w-full lg:w-64 flex-shrink-0">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                  Filtros
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="text-xs"
-                  >
-                    Limpar
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Categories */}
-                <div>
-                  <h3 className="font-semibold mb-3">Categoria</h3>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <div key={category.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={category.id}
-                          checked={selectedCategories.includes(category.id)}
-                          onCheckedChange={() => handleCategoryToggle(category.id)}
-                        />
-                        <Label htmlFor={category.id} className="cursor-pointer">
-                          {category.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Occasions */}
-                <div>
-                  <h3 className="font-semibold mb-3">Ocasião</h3>
-                  <div className="space-y-2">
-                    {occasions.map((occasion) => (
-                      <div key={occasion.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={occasion.id}
-                          checked={selectedOccasions.includes(occasion.id)}
-                          onCheckedChange={() => handleOccasionToggle(occasion.id)}
-                        />
-                        <Label htmlFor={occasion.id} className="cursor-pointer">
-                          {occasion.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <h3 className="font-semibold mb-3">Preço</h3>
-                  <div className="space-y-2">
-                    {priceRanges.map((range) => (
-                      <div key={range.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={range.id}
-                          checked={priceRange === range.id}
-                          onCheckedChange={() => setPriceRange(range.id)}
-                        />
-                        <Label htmlFor={range.id} className="cursor-pointer">
-                          {range.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </aside>
-
-          {/* Products Grid */}
-          <div className="flex-1">
-            <div className="mb-6">
-              <p className="text-muted-foreground">
-                {filteredProducts.length} produto{filteredProducts.length !== 1 ? "s" : ""} encontrado{filteredProducts.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} {...product} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">
-                  Nenhum produto encontrado com os filtros selecionados.
-                </p>
-                <Button onClick={clearFilters} variant="outline">
-                  Limpar Filtros
-                </Button>
-              </div>
-            )}
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Catálogo de Produtos
+          </h1>
+          <div className="max-w-2xl mx-auto bg-gradient-card border-2 border-primary/20 rounded-2xl p-4 shadow-soft">
+            <p className="text-sm text-muted-foreground">
+              Todos os itens do nosso catálogo possuem variações de cores e tipos diferentes.{" "}
+              <a 
+                href="https://wa.me/5555996665991?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20as%20variações%20dos%20produtos."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-primary hover:text-primary/80 transition-smooth"
+              >
+                Entre em contato para saber mais!
+              </a>
+            </p>
           </div>
         </div>
+
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+            <Input
+              type="search"
+              placeholder="O que você procura? Ex: caneca, camiseta, etc."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12 text-base"
+            />
+          </div>
+        </div>
+
+        {/* Category Filters */}
+        <div className="mb-8">
+          <div className="flex flex-wrap gap-3 justify-center">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className={`transition-smooth ${
+                  selectedCategory === category 
+                    ? "bg-primary text-primary-foreground shadow-medium" 
+                    : "hover:bg-primary/10 hover:border-primary"
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results Count */}
+        <div className="mb-6 text-center">
+          <p className="text-muted-foreground">
+            {filteredProducts.length} produto{filteredProducts.length !== 1 ? "s" : ""} encontrado{filteredProducts.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Products Grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {filteredProducts.map((product) => (
+              <div
+                key={product.id}
+                onClick={() => openModal(product)}
+                className="cursor-pointer"
+              >
+                <div className="bg-card rounded-xl overflow-hidden shadow-soft hover:shadow-medium transition-smooth group">
+                  <div className="aspect-square bg-secondary overflow-hidden">
+                    <img
+                      src={product.imagem_url}
+                      alt={product.nome}
+                      className="w-full h-full object-contain p-4 transition-smooth group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="font-medium text-sm mb-2 line-clamp-2 min-h-[2.5rem]">
+                      {product.nome}
+                    </p>
+                    <p className="text-lg font-bold text-primary">
+                      R$ {product.preco.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg mb-4">
+              Nenhum produto encontrado.
+            </p>
+            <Button 
+              onClick={() => {
+                setSearchTerm("");
+                setSelectedCategory("Todos");
+              }}
+              variant="outline"
+            >
+              Limpar Filtros
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Product Modal */}
+      <ProductModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   );
 };
