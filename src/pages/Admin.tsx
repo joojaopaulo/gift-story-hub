@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { categories } from "@/data/products";
 
 const formSchema = z.object({
@@ -17,14 +17,14 @@ const formSchema = z.object({
   categoria: z.string().min(1, "Selecione uma categoria"),
   preco: z.string().min(1, "Preço é obrigatório"),
   descricao: z.string().optional(),
-  imagem: z.instanceof(FileList).optional(),
+  imagens: z.instanceof(FileList).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 const Admin = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -40,38 +40,58 @@ const Admin = () => {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     try {
-      let imageUrl = "";
-
-      // Upload image if provided
-      if (data.imagem && data.imagem.length > 0) {
-        const file = data.imagem[0];
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from("product-images")
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from("product-images")
-          .getPublicUrl(filePath);
-
-        imageUrl = publicUrl;
-      }
-
-      // Insert product
-      const { error: insertError } = await supabase.from("products").insert({
-        nome: data.nome,
-        categoria: data.categoria,
-        preco: parseFloat(data.preco),
-        descricao: data.descricao || null,
-        imagem_url: imageUrl || null,
-      });
+      // Insert product first
+      const { data: product, error: insertError } = await supabase
+        .from("products")
+        .insert({
+          nome: data.nome,
+          categoria: data.categoria,
+          preco: parseFloat(data.preco),
+          descricao: data.descricao || null,
+          imagem_url: null,
+        })
+        .select()
+        .single();
 
       if (insertError) throw insertError;
+
+      // Upload images if provided
+      if (data.imagens && data.imagens.length > 0) {
+        const imageUrls: string[] = [];
+        
+        for (let i = 0; i < data.imagens.length; i++) {
+          const file = data.imagens[i];
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${product.id}_${i}_${Math.random()}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(fileName, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(fileName);
+
+          imageUrls.push(publicUrl);
+
+          // Insert into product_images table
+          await supabase.from("product_images").insert({
+            product_id: product.id,
+            image_url: publicUrl,
+            position: i,
+          });
+        }
+
+        // Update product with first image URL
+        if (imageUrls.length > 0) {
+          await supabase
+            .from("products")
+            .update({ imagem_url: imageUrls[0] })
+            .eq("id", product.id);
+        }
+      }
 
       toast({
         title: "Produto adicionado!",
@@ -79,7 +99,7 @@ const Admin = () => {
       });
 
       form.reset();
-      setImagePreview(null);
+      setImagePreviews([]);
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -92,15 +112,25 @@ const Admin = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const previews: string[] = [];
+      Array.from(files).forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          previews.push(reader.result as string);
+          if (previews.length === files.length) {
+            setImagePreviews(previews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removeImagePreview = (index: number) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -182,28 +212,42 @@ const Admin = () => {
 
               <FormField
                 control={form.control}
-                name="imagem"
+                name="imagens"
                 render={({ field: { onChange, value, ...field } }) => (
                   <FormItem>
-                    <FormLabel>Imagem do Produto</FormLabel>
+                    <FormLabel>Imagens do Produto (múltiplas)</FormLabel>
                     <FormControl>
                       <div className="space-y-4">
                         <Input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={(e) => {
                             onChange(e.target.files);
-                            handleImageChange(e);
+                            handleImagesChange(e);
                           }}
                           {...field}
                         />
-                        {imagePreview && (
-                          <div className="relative w-full h-48 bg-secondary rounded-lg overflow-hidden">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="w-full h-full object-contain"
-                            />
+                        {imagePreviews.length > 0 && (
+                          <div className="grid grid-cols-2 gap-4">
+                            {imagePreviews.map((preview, index) => (
+                              <div key={index} className="relative w-full h-48 bg-secondary rounded-lg overflow-hidden group">
+                                <img
+                                  src={preview}
+                                  alt={`Preview ${index + 1}`}
+                                  className="w-full h-full object-contain"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="icon"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => removeImagePreview(index)}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>

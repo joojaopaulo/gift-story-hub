@@ -1,6 +1,8 @@
-import { X, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { X, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
+import { useProductImages } from "@/hooks/useProductImages";
 
 interface ProductModalProps {
   product: Product | null;
@@ -9,7 +11,24 @@ interface ProductModalProps {
 }
 
 const ProductModal = ({ product, isOpen, onClose }: ProductModalProps) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { data: productImages } = useProductImages(product?.id || "");
+  
   if (!isOpen || !product) return null;
+
+  // Combine main image with additional images
+  const allImages = [
+    product.imagem_url,
+    ...(productImages?.map(img => img.image_url) || [])
+  ].filter(Boolean);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
 
   const handleWhatsApp = () => {
     const message = `Olá! Gostaria de encomendar: ${product.nome} - R$ ${product.preco.toFixed(2)}`;
@@ -37,13 +56,50 @@ const ProductModal = ({ product, isOpen, onClose }: ProductModalProps) => {
 
         <div className="p-6 md:p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Image */}
-            <div className="aspect-square bg-secondary rounded-xl overflow-hidden flex items-center justify-center">
-              <img
-                src={product.imagem_url}
-                alt={product.nome}
-                className="w-full h-full object-contain p-4"
-              />
+            {/* Image Carousel */}
+            <div className="relative">
+              <div className="aspect-square bg-secondary rounded-xl overflow-hidden flex items-center justify-center">
+                <img
+                  src={allImages[currentImageIndex]}
+                  alt={`${product.nome} - Imagem ${currentImageIndex + 1}`}
+                  className="w-full h-full object-contain p-4"
+                />
+              </div>
+              
+              {allImages.length > 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                    onClick={prevImage}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                    onClick={nextImage}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {allImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          index === currentImageIndex
+                            ? "bg-primary w-4"
+                            : "bg-primary/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Info */}

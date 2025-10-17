@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin, signOut } = useAuth();
 
   const navigation = [
     { name: "Início", href: "/" },
@@ -48,14 +50,52 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* WhatsApp Button - Desktop */}
-          <Button
-            onClick={handleWhatsApp}
-            className="hidden md:flex items-center gap-2 bg-whatsapp hover:bg-whatsapp-hover text-white"
-          >
-            <MessageCircle size={18} />
-            WhatsApp
-          </Button>
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-2">
+            <Button
+              onClick={handleWhatsApp}
+              className="items-center gap-2 bg-whatsapp hover:bg-whatsapp-hover text-white"
+            >
+              <MessageCircle size={18} />
+              WhatsApp
+            </Button>
+            
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="items-center gap-2"
+                  >
+                    <Link to="/admin">
+                      <Shield size={18} />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
+                <Button
+                  onClick={signOut}
+                  variant="outline"
+                  className="items-center gap-2"
+                >
+                  <LogOut size={18} />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <Button
+                asChild
+                variant="outline"
+                className="items-center gap-2"
+              >
+                <Link to="/auth">
+                  <User size={18} />
+                  Login
+                </Link>
+              </Button>
+            )}
+          </div>
 
           {/* Mobile Menu Button */}
           <button
@@ -95,6 +135,47 @@ const Header = () => {
               <MessageCircle size={18} className="mr-2" />
               WhatsApp
             </Button>
+            
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Link to="/admin">
+                      <Shield size={18} className="mr-2" />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
+                <Button
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <LogOut size={18} className="mr-2" />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Link to="/auth">
+                  <User size={18} className="mr-2" />
+                  Login
+                </Link>
+              </Button>
+            )}
           </nav>
         </div>
       )}
