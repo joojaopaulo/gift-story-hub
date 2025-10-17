@@ -1,9 +1,12 @@
 export interface Product {
-  id: number;
+  id: string | number;
   nome: string;
   categoria: string;
   imagem_url: string;
   preco: number;
+  descricao?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type ProductCategory = 

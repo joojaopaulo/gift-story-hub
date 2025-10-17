@@ -1,13 +1,14 @@
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import { Search, Loader2 } from "lucide-react";
 import ProductModal from "@/components/ProductModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { allProducts, categories } from "@/data/products";
+import { categories } from "@/data/products";
 import { Product } from "@/types/product";
+import { useProducts } from "@/hooks/useProducts";
 
 const Products = () => {
+  const { data: products = [], isLoading, error } = useProducts();
   const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -25,7 +26,7 @@ const Products = () => {
 
   // Filter products based on category and search
   const filteredProducts = useMemo(() => {
-    let filtered = allProducts;
+    let filtered = products;
 
     // Filter by category
     if (selectedCategory !== "Todos") {
@@ -42,7 +43,21 @@ const Products = () => {
     }
 
     return filtered;
-  }, [selectedCategory, searchTerm]);
+  }, [products, selectedCategory, searchTerm]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center py-16">
+            <p className="text-destructive text-lg mb-4">
+              Erro ao carregar produtos. Tente novamente mais tarde.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -109,7 +124,11 @@ const Products = () => {
         </div>
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {filteredProducts.map((product) => (
               <div
