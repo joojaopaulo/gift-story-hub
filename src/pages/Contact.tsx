@@ -6,6 +6,29 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Mail, Phone, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const contactFormSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(1, "Nome é obrigatório")
+    .max(100, "Nome deve ter no máximo 100 caracteres"),
+  whatsapp: z.string()
+    .trim()
+    .min(1, "WhatsApp é obrigatório")
+    .regex(/^[\d\s()+-]+$/, "WhatsApp deve conter apenas números e caracteres válidos")
+    .max(20, "WhatsApp deve ter no máximo 20 caracteres"),
+  email: z.string()
+    .trim()
+    .email("Email inválido")
+    .max(255, "Email deve ter no máximo 255 caracteres")
+    .optional()
+    .or(z.literal("")),
+  message: z.string()
+    .trim()
+    .min(1, "Mensagem é obrigatória")
+    .max(1000, "Mensagem deve ter no máximo 1000 caracteres"),
+});
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -18,8 +41,25 @@ const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Send to WhatsApp
-    const whatsappMessage = `Olá! Meu nome é ${formData.name}.%0A%0A${formData.message}%0A%0AContato: ${formData.whatsapp}%0AEmail: ${formData.email}`;
+    // Validate form data
+    const validation = contactFormSchema.safeParse(formData);
+    
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      toast.error(firstError.message);
+      return;
+    }
+
+    const validatedData = validation.data;
+    
+    // Safely encode data for WhatsApp URL
+    const encodedName = encodeURIComponent(validatedData.name);
+    const encodedMessage = encodeURIComponent(validatedData.message);
+    const encodedWhatsapp = encodeURIComponent(validatedData.whatsapp);
+    const encodedEmail = validatedData.email ? encodeURIComponent(validatedData.email) : "";
+    
+    // Construct WhatsApp message
+    const whatsappMessage = `Olá! Meu nome é ${encodedName}.%0A%0A${encodedMessage}%0A%0AContato: ${encodedWhatsapp}${encodedEmail ? `%0AEmail: ${encodedEmail}` : ""}`;
     window.open(`https://wa.me/5555996665991?text=${whatsappMessage}`, "_blank");
     
     toast.success("Mensagem enviada! Aguarde nosso contato.");
